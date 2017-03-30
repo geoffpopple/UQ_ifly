@@ -1,49 +1,38 @@
 <?php
+    class Database {
 
-/**
- * Created by PhpStorm.
- * User: geoffpopple
- * Date: 26/3/17
- * Time: 9:48 PM
- */
+        // The database connection
+        protected static $connection;
 
-class Database
-{
-    private static $dbName = 'ifly' ;
-    private static $dbHost = '127.0.0.1' ;
-    private static $dbUsername = 'root';
+        /**
+        * Connect to the database
+        *
+        * @return null on failure / PDO object instance on success
+        */
 
-    private static $cont  = null;
-
-    public function __construct() {
-        die('Init function is not allowed');
-    }
-
-    public static function connect()
-    {
-        // One connection through whole application
-        if ( null == self::$cont )
-        {
-            try
-            {
-                if (!empty(self::$dbUsername)) {
-                    self::$cont =  new PDO("mysql:host=".self::$dbHost.";"."dbname=".self::$dbName,
-                        self::$dbUsername);
-                    self::$cont ->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-                    self::$cont ->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-                }
-            }
-            catch(PDOException $e)
-            {
-                die($e->getMessage());
-            }
+        public static function connect() {
+        // Try and connect to the database
+            // Emulate a singleton in PHP
+        if(!isset(self::$connection)) {
+            $config = parse_ini_file('Config.ini');
+            self::$connection = new PDO( "mysql:host=127.0.0.1;dbname=".$config['dbname'], $config['username'],$config{'password'});
+            //prevent prepared statement emmulation
+            //avoid SQL Injection
+            self::$connection->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+            self::$connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         }
-        return self::$cont;
-    }
 
-    public static function disconnect()
-    {
-        self::$cont = null;
-    }
+        // If connection was not successful, handle the error
+         if(self::$connection === false) {
+            // To be don: Handle error - log to a file, show an error etc.
+        return null;
+        }
+
+        return self::$connection;
 }
-?>
+
+        public static function disconnect()
+        {
+            self::$connection = null;
+        }
+}
